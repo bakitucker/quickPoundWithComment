@@ -1,33 +1,38 @@
 const cloudinary = require("../middleware/cloudinary");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const Workout = require("../models/Workout");
 
 module.exports = {
   getProfile: async (req, res) => {
     try {
-      const posts = await Post.find({ user: req.user.id });
-      res.render("profile.ejs", { posts: posts, user: req.user });
+      try {
+        const posts = await Post.find({ user: req.user.id });
+        res.render("profile.ejs", { posts: posts, user: req.user });
+      } catch (err) {
+        console.log(err);
+      }
     } catch (err) {
       console.log(err);
     }
   },
   getFeed: async (req, res) => {
     try {
-      const posts = await Post.find().sort({ createdAt: "desc" }).lean();
-      res.render("feed.ejs", { posts: posts });
+      const workouts = await Workout.find({ user: req.user.id });
+      res.render("feed.ejs", { workouts: workouts, user: req.user });
     } catch (err) {
       console.log(err);
     }
   },
-  getPost: async (req, res) => {
+  getWorkouts: async (req, res) => {
     try {
-      const post = await Post.findById(req.params.id);
-      const comments = await Comment.find({postID:req.params.id});  
-      res.render("post.ejs", { post: post, user: req.user, comment: comments});
+      const workouts = await Workout.find({ user: req.user.id });
+      res.render("workouts.ejs", { workouts: workouts, user: req.user });
     } catch (err) {
       console.log(err);
     }
   },
+  
   createPost: async (req, res) => {
     try {
       // Upload image to cloudinary
@@ -47,6 +52,25 @@ module.exports = {
       console.log(err);
     }
   },
+  createWorkout: async (req, res) => {
+    try {
+
+
+      await Workout.create({
+        workOutName: req.body.workOutName,
+        bodyPart: req.body.bodyPart,
+        weight: req.body.weight,
+        reps: req.body.reps,
+        sets: req.body.sets,
+        user: req.user.id
+      });
+      console.log("Workout has been Added!");
+      res.redirect("/feed");
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  
   createComment: async (req, res) => {
     try {
       await Comment.create({
